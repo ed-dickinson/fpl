@@ -44,6 +44,24 @@ body {
 }
 
 
+#loading-indicator {
+  background-image: url('./assets/loading_001.png');
+  height: 20px;
+  width: 20px;
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background-size: cover;
+}
+#loading-indicator.loading {
+  background-image: url('./assets/loading_001.gif');
+}
+
+
+
+
+
+
 
 
 @media only screen and (max-width: 600px) {

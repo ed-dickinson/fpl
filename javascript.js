@@ -8,6 +8,8 @@ let dom = {
   teams : document.querySelector('#teams')
 }
 
+
+
 let fetchedGameweeks = []
 
 async function getGameweek(gw) {
@@ -19,7 +21,7 @@ async function getGameweek(gw) {
   });
   const data = await response.json();
 
-  console.log('gameweek:', gw, data)
+  console.log('got gameweek:', gw, data)
 
   // gameweek is an array of players with .id(i+1?) and .stats.total_points and .explain array [{fixture, stats[{}]}]
 
@@ -29,32 +31,42 @@ async function getGameweek(gw) {
 
 async function getGameweeks() {
   let wait_on = []
+  let wait_on_index = []
   for (let i = 0; i < lookback; i++) {
 
     if (!fetchedGameweeks[gameweek - i]) {
+      document.querySelector('#loading-indicator').classList.add('loading')
+
       console.log('no gameweek')
       // fetchedGameweeks[gameweek - i] = getGameweek(gameweek - i)
       wait_on.push(getGameweek(gameweek - i))
+      wait_on_index.push(gameweek - i)
       // wait_on.push[fetchedGameweeks[gameweek - i]]
+      console.log('waiting on...', wait_on.length, wait_on)
     }
   }
   let fetched = await Promise.all(wait_on)
 
   fetched.forEach(fetch => {
     let i = fetched.indexOf(fetch)
-    fetchedGameweeks[gameweek - i] = fetched[i]
+
+    fetchedGameweeks[wait_on_index[i]] = fetched[i]
 
   })
 
   if (fetched) {
     console.log(fetchedGameweeks)
     recalcPlayers()
+
+    document.querySelector('#loading-indicator').classList.remove('loading')
   }
 
   console.log(fetched)
 }
 
 async function getGeneral() {
+
+  document.querySelector('#loading-indicator').classList.add('loading')
 
   const response = await fetch('https://cors-anywhere.herokuapp.com/' + 'https://fantasy.premierleague.com/api/bootstrap-static/', {
     mode: 'cors',
