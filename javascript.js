@@ -8,7 +8,25 @@ let dom = {
   teams : document.querySelector('#teams')
 }
 
+const storeGameweek = (gw, array) => {
+  localStorage.setItem('gameweek' + gw, JSON.stringify(array))
+  // console.log('stored gw', gw)
+}
+const checkGameweekStorage = (gw) => {
+  let ls = 0
+  // maybe change this from always getting the most recent gameweek as it could change
+  for (let i = 0; i <= gw; i++) {
+    let retrieval = localStorage.getItem('gameweek' + i)
 
+    if (retrieval !== null) {
+      // console.log(retrieval)
+      fetchedGameweeks[i] = JSON.parse(retrieval)
+      ls++
+    }
+  }
+
+  // console.log(ls, 'weeks were retrieved from localStorage')
+}
 
 let fetchedGameweeks = []
 
@@ -25,6 +43,8 @@ async function getGameweek(gw) {
 
   // gameweek is an array of players with .id(i+1?) and .stats.total_points and .explain array [{fixture, stats[{}]}]
 
+  storeGameweek(gw, data)
+
   return data;
 
 }
@@ -37,7 +57,6 @@ async function getGameweeks() {
     if (!fetchedGameweeks[gameweek - i]) {
       document.querySelector('#loading-indicator').classList.add('loading')
 
-      console.log('no gameweek')
       // fetchedGameweeks[gameweek - i] = getGameweek(gameweek - i)
       wait_on.push(getGameweek(gameweek - i))
       wait_on_index.push(gameweek - i)
@@ -89,6 +108,7 @@ async function getGeneral() {
   })
   document.querySelector('#gameweek').innerHTML = gameweek
 
+  checkGameweekStorage(gameweek) // checks local storage
   getGameweeks()
 
   return data;
@@ -121,7 +141,7 @@ const tabulatePlayers = () => {
     sorted_players = sorted_players.filter(x => {return x.element_type === position_filter});
   }
   // players.forEach(player => {
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < list_amount; i++) {
     let player = sorted_players[i]
     document.querySelector('#players table tbody').innerHTML += `<tr>
       <td>${player.web_name}</td>
@@ -161,6 +181,28 @@ const recalcPlayers = () => {
 // }
 
 
+let list_amount = 20
+
+dom.list_amount = document.querySelector('#amount-selector')
+
+const changeAmount = (i) => {
+  if (list_amount <= 5 && i < 0) {return}
+  else {
+    list_amount += i
+    dom.list_amount.querySelector('span').textContent = list_amount
+    if (i !== 0) {tabulatePlayers()}
+  }
+
+
+}
+changeAmount(0)
+dom.list_amount.querySelector('button:first-of-type').addEventListener('click', ()=>{
+  changeAmount(-5)
+})
+dom.list_amount.querySelector('button:nth-of-type(2)').addEventListener('click', ()=>{
+  changeAmount(5)
+})
+
 
 
 let lookback = 4
@@ -168,7 +210,7 @@ let lookback = 4
 dom.lookback = document.querySelector('#lookback-selector')
 
 const changeLookback = (i) => {
-  if (lookback === 1 || lookback === gameweek) {return}
+  if ((lookback === 1 && i < 0) || (lookback === gameweek && i > 0)) {return}
   else {
     lookback += i
     dom.lookback.querySelector('span').textContent = lookback
@@ -195,14 +237,10 @@ let position_filter = 0
 
 dom.position_selector = document.querySelector('#position-selector')
 
-const changePosFilt = () => {
-
-}
-
 for (let i = 0; i <= 4; i++) {
   let button = document.querySelectorAll('#position-selector button')[i]
   button.addEventListener('click', ()=>{
-    console.log(i)
+
     position_filter = i
     tabulatePlayers()
     if (document.querySelector('#position-selector .selected')) {
