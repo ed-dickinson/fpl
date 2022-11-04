@@ -50,6 +50,7 @@ async function getGameweek(gw) {
 }
 
 async function getGameweeks() {
+
   let wait_on = []
   let wait_on_index = []
   for (let i = 0; i < lookback; i++) {
@@ -77,6 +78,9 @@ async function getGameweeks() {
     console.log(fetchedGameweeks)
     recalcPlayers()
 
+    document.querySelector('#loading-indicator').classList.remove('loading')
+  } else {
+    console.log('failed fetch')
     document.querySelector('#loading-indicator').classList.remove('loading')
   }
 
@@ -108,7 +112,7 @@ async function getGeneral() {
   })
   document.querySelector('#gameweek').innerHTML = gameweek
 
-  checkGameweekStorage(gameweek) // checks local storage
+  // checkGameweekStorage(gameweek) // checks local storage
   getGameweeks()
 
   return data;
@@ -214,6 +218,9 @@ const changeLookback = (i) => {
   else {
     lookback += i
     dom.lookback.querySelector('span').textContent = lookback
+  }
+  if (i === 0) { // stops fetching on first load
+    return
   }
   if (!fetchedGameweeks[gameweek - lookback]) {
     getGameweeks()
