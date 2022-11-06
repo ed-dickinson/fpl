@@ -180,9 +180,7 @@ const recalcPlayers = () => {
   tabulatePlayers()
 }
 
-// const retrigger = () => {
-//
-// }
+
 
 
 let list_amount = 20
