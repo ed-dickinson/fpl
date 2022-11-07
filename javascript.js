@@ -75,7 +75,7 @@ async function getGameweeks() {
   })
 
   if (fetched) {
-    console.log(fetchedGameweeks)
+    // console.log(fetchedGameweeks)
     recalcPlayers()
 
     document.querySelector('#loading-indicator').classList.remove('loading')
