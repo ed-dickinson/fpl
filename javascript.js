@@ -1,6 +1,7 @@
 let players,
     teams,
-    gameweek
+    gameweek,
+    fixtures
 
 let gameweeks = []
 
@@ -25,7 +26,7 @@ const checkGameweekStorage = (gw) => {
     }
   }
 
-  // console.log(ls, 'weeks were retrieved from localStorage')
+  console.log(ls, 'weeks were retrieved from localStorage')
 }
 
 let fetchedGameweeks = []
@@ -112,12 +113,52 @@ async function getGeneral() {
   })
   document.querySelector('#gameweek').innerHTML = gameweek
 
-  // checkGameweekStorage(gameweek) // checks local storage
+  checkGameweekStorage(gameweek) // checks local storage
   getGameweeks()
 
   return data;
 
 } getGeneral()
+
+
+
+async function getFixtures() {
+
+  // document.querySelector('#loading-indicator').classList.add('loading')
+
+  let retrieval = localStorage.getItem('fixtures')
+
+  if (retrieval !== null && retrieval !== 'undefined') {
+    console.log('fixtures retrieved from local Storage', retrieval)
+    fixtures = JSON.parse(retrieval)
+    return
+  }
+
+  const response = await fetch('https://cors-anywhere.herokuapp.com/' + 'https://fantasy.premierleague.com/api/fixtures/', {
+    mode: 'cors',
+    headers: {
+    }
+  });
+  const data = await response.json();
+
+  console.log('fixtures:', data)
+
+  fixtures = data
+  // tabulatePlayers(players)
+  //
+  // teams = data.teams
+  // tabulateTeams(teams)
+
+  localStorage.setItem('fixtures', JSON.stringify(data))
+
+  recalcPlayers()
+  console.log('recalc with fixt')
+
+  return data;
+
+} getFixtures()
+
+
 
 const tabulateTeams = () => {
   console.log(teams)
@@ -155,6 +196,8 @@ const tabulatePlayers = () => {
       <td>${player.selected_by_percent}%</td>
       <td>£${player.now_cost / 10}</td>
       <td>${player.recent_points ? player.recent_points : 'Ø'}</td>
+      <td>${player.adjusted_points ? player.adjusted_points : 'Ø'}</td>
+      <td>${player.predicted_points ? player.predicted_points : 'Ø'}</td>
       <td>${player.news!== '' ? '!' : ' '} ${player.news}</td>
     </tr>`
 
@@ -167,18 +210,46 @@ const recalcPlayers = () => {
   players.forEach(player => {
     // console.log(player)
     player.recent_points = 0
+    player.adjusted_points = 0
   })
   for (let i = 0; i < lookback; i++) {
     // console.log(fetchedGameweeks[gameweek - i])
     fetchedGameweeks[gameweek - i].elements.forEach(player => {
       // console.log(player)
+      //player pointer is player in main player array
+      let player_pointer = players.find(x => x.id === player.id)
       // players[player.id - 1].recent_points += player.stats.total_points
-      players.find(x => x.id === player.id).recent_points += player.stats.total_points
+      player_pointer.recent_points += player.stats.total_points
+      // console.log(player)
+
+      // here is ARRAY I for multiply gameweeks !!!!!!!!!!
+
+      if (fixtures) {
+        console.log(i, player)
+        let fixture
+        if (player.explain.length > 0) {
+          fixture = fixtures.find(x => x.id === player.explain[0].fixture)
+
+          console.log(fixture)
+
+          let rival_team = player.team === fixture.team_h ? fixture.team_a : fixture.team_h
+          let vs_strength = teams[rival_team-1].strength
+          // let add
+          // team_a , team_a_difficulty
+          player_pointer.adjusted_points += (vs_strength * player.stats.total_points / 4)
+        }
+
+      }
+
     })
   }
 
   tabulatePlayers()
 }
+
+
+
+
 
 
 
